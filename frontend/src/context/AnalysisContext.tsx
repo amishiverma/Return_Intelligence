@@ -1,37 +1,80 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-
-export interface AnalysisData {
-    total_returns: number;
-    return_rate: number;
-    return_rate_trend: number;
-    fixes_applied: number;
-    returns_avoided: number;
-    categories: Record<string, number>;
-    trends: { date: string; count: number }[];
-    root_causes: any[];
-}
+import { createContext, useContext, useState, ReactNode } from 'react';
+import { RootCause } from '@/types';
+import { useApp } from '@/context/AppContext';
 
 interface AnalysisContextType {
-    analysis: AnalysisData | null;
-    setAnalysis: (data: AnalysisData) => void;
+  analysis: any | null;
+  setAnalysisResult: (data: { analysis: any; rootCauses: any[] }) => void;
+  resetAnalysis: () => void;
 }
 
-const AnalysisContext = createContext<AnalysisContextType | undefined>(undefined);
+const AnalysisContext = createContext<AnalysisContextType | undefined>(
+  undefined
+);
 
 export function AnalysisProvider({ children }: { children: ReactNode }) {
-    const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
+  const [analysis, setAnalysis] = useState<any | null>(null);
 
-    return (
-        <AnalysisContext.Provider value={{ analysis, setAnalysis }}>
-            {children}
-        </AnalysisContext.Provider>
-    );
+  // ✅ AppContext owns rootCauses (single source of truth)
+  const { setRootCauses, setIsDataLoaded } = useApp();
+
+  const setAnalysisResult = (data: {
+    analysis: any;
+    rootCauses: any[];
+  }) => {
+    setAnalysis(data.analysis ?? null);
+
+    /**
+     * 🔥 SAFE + STRICT BACKEND → UI ADAPTER
+     */
+    const adaptedRootCauses: RootCause[] = (data.rootCauses ?? [])
+  .filter(
+    (cause) =>
+      typeof cause?.reason === 'string' &&
+      cause.reason.trim().length > 0
+  )
+  .map((cause, idx) => ({
+    id: String(idx),
+    title: cause.reason, // ✅ NO fallback
+    description: 'AI-detected return pattern from customer feedback',
+    impact: 'high',
+    confidence: 85,
+    category: 'Returns',
+    affectedProducts: [],
+    evidenceSnippets: [],
+    recommendations: [],
+    detectedAt: new Date().toISOString(),
+    status: cause.status ?? 'new',
+  }));
+
+
+    setRootCauses(adaptedRootCauses);
+    setIsDataLoaded(true);
+  };
+
+  const resetAnalysis = () => {
+    setAnalysis(null);
+    setRootCauses([]);
+    setIsDataLoaded(false);
+  };
+
+  return (
+    <AnalysisContext.Provider
+      value={{
+        analysis,
+        setAnalysisResult,
+        resetAnalysis,
+      }}
+    >
+      {children}
+    </AnalysisContext.Provider>
+  );
 }
 
 export function useAnalysis() {
-    const context = useContext(AnalysisContext);
-    if (!context) {
-        throw new Error("useAnalysis must be used within AnalysisProvider");
-    }
-    return context;
+  const context = useContext(AnalysisContext);
+  if (!context) {
+    throw new Error('useAnalysis must be used within AnalysisProvider');
+  }
+  return context;
 }

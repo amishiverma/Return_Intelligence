@@ -4,8 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+
 import { AppProvider } from "@/context/AppContext";
-import { AnalysisProvider } from "@/context/AnalysisContext"; // ✅ ADD THIS
+import { AnalysisProvider } from "@/context/AnalysisContext";
+
 import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import DashboardPage from "./pages/DashboardPage";
@@ -20,29 +22,71 @@ const queryClient = new QueryClient();
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
-      <AnalysisProvider>
-        <AppProvider>
+      {/* 🔑 AppProvider MUST wrap AnalysisProvider */}
+      <AppProvider>
+        <AnalysisProvider>
           <TooltipProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/dashboard" element={<AppLayout><DashboardPage /></AppLayout>} />
-                <Route path="/upload" element={<AppLayout><UploadPage /></AppLayout>} />
-                <Route path="/explorer" element={<AppLayout><ExplorerPage /></AppLayout>} />
-                <Route path="/chat" element={<AppLayout><ChatPage /></AppLayout>} />
-                <Route path="/sustainability" element={<AppLayout><SustainabilityPage /></AppLayout>} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <AppLayout>
+                      <DashboardPage />
+                    </AppLayout>
+                  }
+                />
+                <Route
+                  path="/upload"
+                  element={
+                    <AppLayout>
+                      <UploadPage />
+                    </AppLayout>
+                  }
+                />
+                <Route
+                  path="/explorer"
+                  element={
+                    <AppLayout>
+                      <ExplorerPage />
+                    </AppLayout>
+                  }
+                />
+                <Route
+                  path="/chat"
+                  element={
+                    <AppLayout>
+                      <ChatPage />
+                    </AppLayout>
+                  }
+                />
+                <Route
+                  path="/sustainability"
+                  element={
+                    <AppLayout>
+                      <SustainabilityPage />
+                    </AppLayout>
+                  }
+                />
                 <Route
                   path="/settings"
-                  element={<AppLayout><div className="text-foreground">Settings coming soon</div></AppLayout>}
+                  element={
+                    <AppLayout>
+                      <div className="text-foreground">
+                        Settings coming soon
+                      </div>
+                    </AppLayout>
+                  }
                 />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
-        </AppProvider>
-      </AnalysisProvider>
+        </AnalysisProvider>
+      </AppProvider>
     </QueryClientProvider>
   </HelmetProvider>
 );

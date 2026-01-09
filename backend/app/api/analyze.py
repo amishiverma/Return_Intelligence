@@ -1,31 +1,47 @@
 from fastapi import APIRouter
+from pydantic import BaseModel
+from typing import List, Dict, Any
+import json
 from app.services.openai_service import analyze_returns
 from app.services.language_service import extract_language_signals
-from app.state import GLOBAL_ANALYSIS
 
 router = APIRouter()
 
-@router.post("/analyze")
-def analyze_endpoint(returns: list[dict]):
-    global GLOBAL_ANALYSIS
+# ====== In-memory store (demo-safe) ======
+GLOBAL_ANALYSIS: Dict[str, Any] = {}
 
-    # 1. Extract text fields
+class AnalyzeRequest(BaseModel):
+    returns: List[Dict[str, Any]]
+
+@router.post("/analyze")
+def analyze(req: AnalyzeRequest):
+    """
+    1. Extract language signals using Azure AI Language
+    2. Generate high-level analysis using Azure OpenAI
+    3. Store result for Copilot + Dashboard
+    """
+
+    # Collect free-text reasons for language analysis
     texts = [
         r.get("reason", "")
-        for r in returns
+        for r in req.returns
         if r.get("reason")
     ]
 
-    # 2. Azure Language Service
     language_signals = extract_language_signals(texts)
 
-    # 3. Azure OpenAI reasoning
-    analysis = analyze_returns(returns)
+    analysis_summary = analyze_returns(req.returns)
 
-    # 4. Store combined intelligence
-    GLOBAL_ANALYSIS = {
-        "analysis": analysis,
+    cleaned = analysis_summary["summary"].replace("```json", "").replace("```", "").strip()
+
+    GLOBAL_ANALYSIS.clear()
+    GLOBAL_ANALYSIS.update({
         "language_signals": language_signals,
-    }
+        "analysis_summary": analysis_summary["summary"],
+        "total_returns": len(req.returns)
+    })
 
-    return GLOBAL_ANALYSIS
+    return {
+        "status": "ok",
+        "analysis": GLOBAL_ANALYSIS
+    }

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from app.api import analyze, root_causes, copilot, sustainability
 load_dotenv()
+from app.api import analyze, copilot, root_causes
 
 app = FastAPI()
 

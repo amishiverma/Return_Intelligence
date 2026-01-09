@@ -1,7 +1,8 @@
 import os
 from typing import List, Dict, Any
 from openai import AzureOpenAI
-
+from dotenv import load_dotenv
+load_dotenv()
 
 # =========================
 # Azure OpenAI Client

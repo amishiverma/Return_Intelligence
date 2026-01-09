@@ -8,19 +8,32 @@ interface ExplainabilityPanelProps {
   rootCause: RootCause | null;
 }
 
-export function ExplainabilityPanel({ isOpen, onClose, rootCause }: ExplainabilityPanelProps) {
-  if (!rootCause) return null;
+export function ExplainabilityPanel({
+  isOpen,
+  onClose,
+  rootCause,
+}: ExplainabilityPanelProps) {
+  if (!isOpen || !rootCause) return null;
+
+  // ✅ HARD SAFETY NORMALIZATION
+  const evidenceSnippets = Array.isArray(rootCause.evidenceSnippets)
+    ? rootCause.evidenceSnippets
+    : [];
 
   const explanationSteps = [
     {
       icon: FileText,
       title: 'Data Sources Analyzed',
-      content: `Analyzed ${Math.floor(Math.random() * 500) + 200} return records with customer feedback from the past 30 days.`,
+      content: `Analyzed ${
+        Math.floor(Math.random() * 500) + 200
+      } return records with customer feedback from the past 30 days.`,
     },
     {
       icon: Brain,
       title: 'Pattern Recognition',
-      content: `Natural Language Processing identified recurring themes across ${rootCause.evidenceSnippets.length}+ customer comments mentioning similar issues.`,
+      content: `Natural Language Processing identified recurring themes across ${
+        evidenceSnippets.length
+      } customer comments mentioning similar issues.`,
     },
     {
       icon: CheckCircle,
@@ -30,7 +43,8 @@ export function ExplainabilityPanel({ isOpen, onClose, rootCause }: Explainabili
     {
       icon: Shield,
       title: 'Responsible AI',
-      content: 'This insight was generated using explainable AI techniques. All conclusions are traceable to specific customer feedback.',
+      content:
+        'This insight was generated using explainable AI techniques. All conclusions are traceable to specific customer feedback.',
     },
   ];
 
@@ -59,11 +73,18 @@ export function ExplainabilityPanel({ isOpen, onClose, rootCause }: Explainabili
                     <Brain className="w-5 h-5 text-accent-purple" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-foreground">Why AI Said This</h2>
-                    <p className="text-sm text-muted-foreground">Explainability & Trust</p>
+                    <h2 className="text-lg font-bold text-foreground">
+                      Why AI Said This
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Explainability & Trust
+                    </p>
                   </div>
                 </div>
-                <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+                <button
+                  onClick={onClose}
+                  className="text-muted-foreground hover:text-foreground"
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -73,8 +94,12 @@ export function ExplainabilityPanel({ isOpen, onClose, rootCause }: Explainabili
             <div className="p-6 space-y-4">
               {/* Root cause reference */}
               <div className="p-4 bg-secondary/30 border border-border/50 rounded-xl">
-                <p className="text-xs text-muted-foreground mb-1">Analyzing insight:</p>
-                <p className="text-sm font-medium text-foreground">{rootCause.title}</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Analyzing insight:
+                </p>
+                <p className="text-sm font-medium text-foreground">
+                  {rootCause.title}
+                </p>
               </div>
 
               {/* Explanation steps */}
@@ -93,44 +118,40 @@ export function ExplainabilityPanel({ isOpen, onClose, rootCause }: Explainabili
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-foreground mb-1">{step.title}</h4>
-                      <p className="text-sm text-muted-foreground">{step.content}</p>
+                      <h4 className="text-sm font-medium text-foreground mb-1">
+                        {step.title}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {step.content}
+                      </p>
                     </div>
                   </motion.div>
                 ))}
               </div>
 
-              {/* Highlighted evidence */}
-              <div className="mt-6">
-                <h4 className="text-sm font-medium text-foreground mb-3">Key Evidence Highlighted</h4>
-                <div className="space-y-2">
-                  {rootCause.evidenceSnippets.slice(0, 2).map((snippet, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.5 + i * 0.1 }}
-                      className="p-3 bg-card border border-border rounded-lg"
-                    >
-                      <p className="text-sm text-muted-foreground">
-                        {snippet.split(' ').map((word, idx) => {
-                          const isHighlighted = ['thin', 'thick', 'picture', 'photo', 'expected', 'disappointed'].some(
-                            kw => word.toLowerCase().includes(kw)
-                          );
-                          return (
-                            <span 
-                              key={idx} 
-                              className={isHighlighted ? 'text-accent font-medium bg-accent/10 px-1 rounded' : ''}
-                            >
-                              {word}{' '}
-                            </span>
-                          );
-                        })}
-                      </p>
-                    </motion.div>
-                  ))}
+              {/* Evidence */}
+              {evidenceSnippets.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-sm font-medium text-foreground mb-3">
+                    Key Evidence Highlighted
+                  </h4>
+                  <div className="space-y-2">
+                    {evidenceSnippets.slice(0, 2).map((snippet, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 + i * 0.1 }}
+                        className="p-3 bg-card border border-border rounded-lg"
+                      >
+                        <p className="text-sm text-muted-foreground">
+                          {snippet}
+                        </p>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Trust badge */}
               <motion.div
@@ -141,8 +162,12 @@ export function ExplainabilityPanel({ isOpen, onClose, rootCause }: Explainabili
               >
                 <Shield className="w-5 h-5 text-success" />
                 <div>
-                  <p className="text-sm font-medium text-success">Responsible AI Certified</p>
-                  <p className="text-xs text-muted-foreground">This insight follows Microsoft's Responsible AI principles</p>
+                  <p className="text-sm font-medium text-success">
+                    Responsible AI Certified
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    This insight follows Microsoft's Responsible AI principles
+                  </p>
                 </div>
               </motion.div>
             </div>
